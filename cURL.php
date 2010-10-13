@@ -30,7 +30,7 @@ class cURL
 	
 	protected $callback  = null;
 	
-	const DEBUG          = true;
+	const DEBUG          = false;
 	
 	
 	
