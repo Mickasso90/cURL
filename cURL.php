@@ -96,7 +96,7 @@ class cURL
 	 *
 	 *	$ch->setopt(CURLOPT_URL, 'http://.../');
 	 *	
-	 *	Or:
+	 * Or:
 	 *	
 	 *	$ch->setopt($ch->url, 'http://.../');
 	**/
@@ -180,7 +180,7 @@ class cURL
 	 *
 	 * Usage example:
 	 *
-	 * echo $ch->getinfo(CURLINFO_HTTP_CODE);
+	 *	echo $ch->getinfo(CURLINFO_HTTP_CODE);
 	**/
 	public function getinfo($option = 0)
 	{
@@ -267,7 +267,7 @@ class cURL
 	 *	$ch->setopt($ch->followlocation, true);
 	 *	$ch->setopt($ch->returntransfer, true);
 	 *
-	 *	It's however encouraged to use $ch->setFollowLocation(true) ... 
+	 * It's however encouraged to use $ch->setFollowLocation(true) ... 
 	 *
 	**/	
 	public function __get($constant)
@@ -289,7 +289,7 @@ class cURL
 	 *	$ch->setURL('http://.../');
 	 *	...
 	 *
-	 *	Or even fancier:
+	 * Or even fancier:
 	 *
 	 *	$ch
 	 *		-> setReturntransfer(true)
