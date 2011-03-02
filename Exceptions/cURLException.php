@@ -1,5 +1,7 @@
 <?php
 
+namespace nicoswd\http\curl\Exceptions;
+
 /**
  *    
  *      _/_/_/_/   _/   _/_/_/_/   _/_/_/_/_/   _/_/_/_/   _/  _/  _/           _/        _/_/_/_/   _/_/_/_/   _/_/_/_/_/
@@ -21,7 +23,7 @@
  */
 
 
-class cURL_Exception extends Exception
+class cURLException extends \Exception
 {
 }
 

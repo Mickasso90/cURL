@@ -1,5 +1,7 @@
 <?php
 
+namespace nicoswd\http\curl;
+
 /**
  *    
  *      _/_/_/_/   _/   _/_/_/_/   _/_/_/_/_/   _/_/_/_/   _/  _/  _/           _/        _/_/_/_/   _/_/_/_/   _/_/_/_/_/
@@ -11,14 +13,16 @@
  *      _/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
  *
  *
- *	@Rev.   : 1.5
+ *	@Rev.   : 1.7
  *
- *	@Date   : 13th October 2010
+ *	@Date   : 2nd Feb 2011
  *	@Author : Nicolas Oelgart
  *	@Email  : nico@nicoswd.com
  *	@Web    : www.nicoswd.com
  *
  */
+
+use nicoswd\http\curl\Exceptions\cURLException;
 
 
 class cURL
@@ -29,13 +33,6 @@ class cURL
 	 *
 	**/
 	protected $ch        = null;
-	
-	
-	/**
-	 * Holds the multi handle.
-	 *
-	**/
-	protected $mh        = null;
 	
 	
 	/**
@@ -54,7 +51,7 @@ class cURL
 	
 	
 	/**
-	 * Contructor, takes an URL and options as parameters. Example:
+	 * Constructor, takes an URL and options as parameters. Example:
 	 *
 	 *	$ch = new cURL('http://.../', array(
 	 *		CURLOPT_RETURNTRANSFER => true,
@@ -66,7 +63,7 @@ class cURL
 	public function __construct($url = null, array $options = null)
 	{
 		if (!$this->ch = @curl_init($url))
-			throw new cURL_Exception('Could not initiate cURL');
+			throw new cURLException('Could not initiate cURL');
 		
 		if ($options)
 			$this->setopt_array($options);
@@ -150,7 +147,7 @@ class cURL
 			$this->setReturnTransfer(true);
 			
 			if (($response = @curl_exec($this->ch)) === false)
-				throw new cURL_Exception('Error executing cURL handle');
+				throw new cURLException('Error executing cURL handle');
 			
 			$response = call_user_func($this->callback, $response, $this);
 			$this->removeCallback();
@@ -209,16 +206,6 @@ class cURL
 	
 	
 	/**
-	 * Creates a copy of the current handle. I think returning $this is probably the best way of doing this...?
-	 *
-	**/
-	public function copy_handle()
-	{
-		return $this; // curl_copy_handle($this->ch);
-	}
-	
-	
-	/**
 	 * Returns the version of the cURL lib and components.
 	 *
 	**/	
@@ -244,7 +231,7 @@ class cURL
 	public function setCallback($function)
 	{
 		if (!is_callable($function))
-			throw new cURL_Exception('Invalid callback function supplied');
+			throw new cURLException('Invalid callback function supplied');
 		
 		$this->callback = $function;
 		return $this;
@@ -275,7 +262,7 @@ class cURL
 		$constant = 'CURLOPT_' . strtoupper($constant);
 		
 		if (!defined($constant))
-			throw new cURL_Exception("Undefined constant/property '{$constant}'");
+			throw new cURLException("Undefined constant/property '{$constant}'");
 		
 		return constant($constant);
 	}
@@ -301,111 +288,36 @@ class cURL
 	public function __call($function, array $args)
 	{
 		if (!array_key_exists(0, $args))
-			throw new cURL_Exception('Invalid parameters supplied');
+			throw new cURLException('Invalid parameters supplied');
 		
 		$function = strtoupper($function);
 		
 		if (substr($function, 0, 3) !== 'SET')
-			throw new cURL_Exception("Call to undefined method '{$function}'");
+			throw new cURLException("Call to undefined method '{$function}'");
 		
-		$constant = 'CURLOPT_' . substr_replace($function, '', 0, 3);
+		$constant = 'CURLOPT_' . substr($function, 3);
 		
 		if (!defined($constant))
-			throw new cURL_Exception("Undefined constant '{$constant}'");
+			throw new cURLException("Undefined constant '{$constant}'");
 		
-		if (self::DEBUG)
+		if (static::DEBUG)
 			echo "DEBUG: {$constant} set to ", (string) print_r($args[0], 1), "\n";
 		
 		$this->setopt(constant($constant), $args[0]);
 		return $this;
 	}
 	
-	
+
 	/**
-	 * Initiates a multi handle. Not sure if I like this, but oh well...
+	 * Creates a copy of the current handle.
 	 *
 	**/
-	public function multi_init()
+	public function copy_handle()
 	{
-		$this->mh = curl_multi_init();
-	}
-	
-	
-	/**
-	 * Adds a new handle to the multi handler. Takes an unlimited amount of parameters, all must be instances of cURL.
-	 *
-	**/	
-	public function multi_add_handle(cURL $curl /* [, cURL $curl_1 [, cURL $... ]] */)
-	{
-		foreach (func_get_args() AS $num => $curl)
-		{
-			if (!($curl instanceof cURL))
-				throw new cURL_Exception(sprintf('Argument %d must be an instance of cURL', ++$num));
-			
-			if (($error = @curl_multi_add_handle($this->mh, $curl->ch)) !== CURLM_OK)
-				return $error;
-		}
+		$instance = new self();
+		$instance->ch = $this->ch;
 		
-		return true;
-	}
-	
-	
-	/**
-	 * Executes all pending handles.
-	 *
-	**/	
-	public function multi_exec(&$running = null)
-	{
-		return curl_multi_exec($this->mh, $running);
-	}
-	
-	
-	/**
-	 * Removes a handle from the multi stack.
-	 *
-	**/
-	public function multi_remove_handle(cURL $curl)
-	{
-		return curl_multi_remove_handle($this->mh, $curl->ch);
-	}
-	
-	
-	/**
-	 * Get information about the current transfers.
-	 *
-	**/
-	public function multi_info_read(&$queue = null)
-	{
-		return curl_multi_info_read($this->mh, $queue);
-	}
-	
-	
-	/**
-	 * Return the content of a cURL handle if CURLOPT_RETURNTRANSFER is set.
-	 *
-	**/	
-	public function multi_getcontent()
-	{
-		return curl_multi_getcontent($this->ch);
-	}
-	
-	
-	/**
-	 * Close a set of cURL handles.
-	 *
-	**/
-	public function multi_close()
-	{
-		return curl_multi_close($this->mh);
-	}
-
-
-	/**
-	 * Hmmmm...
-	 *
-	**/
-	public function __clone()
-	{		
+		return $instance;		
 	}
 	
 	
@@ -418,11 +330,7 @@ class cURL
 		if (is_resource($this->ch))
 			$this->close();
 		
-		if (is_resource($this->mh))
-			$this->multi_close();
-		
 		$this->ch = null;
-		$this->mh = null;
 	}
 	
 }
