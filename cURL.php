@@ -13,9 +13,9 @@ namespace nicoswd\http\curl;
  *      _/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
  *
  *
- *	@Rev.   : 1.7
+ *	@Rev.   : 2.0
  *
- *	@Date   : 2nd Feb 2011
+ *	@Date   : 2nd March 2011
  *	@Author : Nicolas Oelgart
  *	@Email  : nico@nicoswd.com
  *	@Web    : www.nicoswd.com
